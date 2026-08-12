@@ -1,0 +1,17 @@
+# Standalone image that runs `payload migrate`. Not used by the DO deploy
+# (.do/app.yaml's `migrate` job runs the buildpack build directly instead) —
+# kept as a manual-use utility, e.g. for running migrations against a
+# database from a machine without a local pnpm/node setup.
+FROM node:22.17.0-alpine
+
+ENV CI=true
+
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+RUN corepack enable && pnpm i --frozen-lockfile
+
+COPY . .
+
+CMD ["pnpm", "payload", "migrate"]

@@ -1,0 +1,8 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+
+blockExoticSubdeps: true
+
+minimumReleaseAge: 10080

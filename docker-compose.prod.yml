@@ -1,0 +1,35 @@
+name: pt-payload-poc-prod
+
+services:
+  payload:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@host.docker.internal:5432/pt-payload-poc
+        PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/pt-payload-poc
+
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - '5432:5432'
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: pt-payload-poc
+    volumes:
+      - data-prod:/var/lib/postgresql/data
+    logging:
+      driver: none
+
+volumes:
+  data-prod:

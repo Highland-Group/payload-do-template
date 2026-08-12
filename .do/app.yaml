@@ -1,0 +1,76 @@
+name: pt-payload-poc
+region: nyc
+
+databases:
+  - name: pt-payload-poc-db
+    engine: PG
+    production: false
+
+services:
+  - name: web
+    github:
+      repo: carrchr/pt-payload-poc
+      branch: main
+      deploy_on_push: true
+    environment_slug: node-js
+    build_command: pnpm build
+    run_command: pnpm start
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    health_check:
+      http_path: /
+    envs:
+      # App Platform builds (buildpack or Dockerfile) never have database
+      # access — DO's own guidance is not to rely on DB connectivity during
+      # build. generateStaticParams in the frontend routes was changed to
+      # skip its DB query for this reason, so RUN_TIME is all this needs.
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${pt-payload-poc-db.DATABASE_URL}
+      # DO's managed/dev Postgres uses a cert signed by DO's own CA, which
+      # node-postgres won't trust by default (SELF_SIGNED_CERT_IN_CHAIN).
+      - key: DATABASE_CA_CERT
+        scope: RUN_TIME
+        value: ${pt-payload-poc-db.CA_CERT}
+      - key: PAYLOAD_SECRET
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: REPLACE_ME
+      - key: NEXT_PUBLIC_SERVER_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${APP_URL}
+      - key: CRON_SECRET
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: REPLACE_ME
+      - key: PREVIEW_SECRET
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: REPLACE_ME
+
+jobs:
+  - name: migrate
+    github:
+      repo: carrchr/pt-payload-poc
+      branch: main
+      deploy_on_push: true
+    kind: PRE_DEPLOY
+    environment_slug: node-js
+    # Skip the `build` script (a full `next build`) — this job only needs
+    # dependencies installed to run the migrate CLI.
+    build_command: pnpm install --frozen-lockfile
+    run_command: pnpm payload migrate
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${pt-payload-poc-db.DATABASE_URL}
+      - key: DATABASE_CA_CERT
+        scope: RUN_AND_BUILD_TIME
+        value: ${pt-payload-poc-db.CA_CERT}
+      - key: PAYLOAD_SECRET
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: REPLACE_ME
