@@ -1,6 +1,6 @@
 name: payload-do-template
 region: nyc
-env:
+envs:
   - key: PAYLOAD_SECRET
     scope: RUN_AND_BUILD_TIME
     type: SECRET
@@ -49,6 +49,20 @@ services:
       - key: DATABASE_CA_CERT
         scope: RUN_TIME
         value: ${payload-do-template-db.CA_CERT}
+      - key: SPACES_KEY_ID
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME
+      - key: SPACES_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME
+      - key: SPACES_BUCKET_NAME
+        scope: RUN_TIME
+        value: REPLACE_ME
+      - key: SPACES_REGION
+        scope: RUN_TIME
+        value: REPLACE_ME
 
 jobs:
   - name: migrate

@@ -3,6 +3,7 @@ import sharp from 'sharp'
 import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
+import { s3Storage } from '@payloadcms/storage-s3'
 
 import { Categories } from './collections/Categories'
 import { Media } from './collections/Media'
@@ -87,7 +88,31 @@ export default buildConfig({
   collections: [Pages, Posts, Media, Categories, Users],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
-  plugins,
+  plugins: [
+    ...plugins,
+    // Only offload media to DO Spaces in production; locally, Media's
+    // `staticDir` serves uploads from disk so dev doesn't need Spaces
+    // credentials or network access.
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          s3Storage({
+            collections: {
+              media: true, // MUST match slug of Collection!
+            },
+            bucket: process.env.SPACES_BUCKET_NAME || '',
+            config: {
+              credentials: {
+                accessKeyId: process.env.SPACES_KEY_ID || '',
+                secretAccessKey: process.env.SPACES_SECRET_KEY || '',
+              },
+              region: process.env.SPACES_REGION || '',
+              endpoint: `https://${process.env.SPACES_REGION}.digitaloceanspaces.com`,
+              forcePathStyle: false,
+            },
+          }),
+        ]
+      : []),
+  ],
   secret: process.env.PAYLOAD_SECRET,
   sharp,
   typescript: {
