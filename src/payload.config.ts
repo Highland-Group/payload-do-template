@@ -90,28 +90,27 @@ export default buildConfig({
   globals: [Header, Footer],
   plugins: [
     ...plugins,
-    // Only offload media to DO Spaces in production; locally, Media's
-    // `staticDir` serves uploads from disk so dev doesn't need Spaces
-    // credentials or network access.
-    ...(process.env.NODE_ENV === 'production'
-      ? [
-          s3Storage({
-            collections: {
-              media: true, // MUST match slug of Collection!
-            },
-            bucket: process.env.SPACES_BUCKET_NAME || '',
-            config: {
-              credentials: {
-                accessKeyId: process.env.SPACES_KEY_ID || '',
-                secretAccessKey: process.env.SPACES_SECRET_KEY || '',
-              },
-              region: process.env.SPACES_REGION || '',
-              endpoint: `https://${process.env.SPACES_REGION}.digitaloceanspaces.com`,
-              forcePathStyle: false,
-            },
-          }),
-        ]
-      : []),
+    s3Storage({
+      // Keep the plugin registered (rather than omitted) in every environment
+      // so its client component stays in `generate:importmap`'s output and
+      // the Media schema stays consistent across envs — only toggle its
+      // runtime behavior. When disabled, Media's `staticDir` serves uploads
+      // from disk instead, so dev doesn't need Spaces credentials.
+      enabled: process.env.NODE_ENV === 'production',
+      collections: {
+        media: true, // MUST match slug of Collection!
+      },
+      bucket: process.env.SPACES_BUCKET_NAME || '',
+      config: {
+        credentials: {
+          accessKeyId: process.env.SPACES_KEY_ID || '',
+          secretAccessKey: process.env.SPACES_SECRET_KEY || '',
+        },
+        region: process.env.SPACES_REGION || '',
+        endpoint: `https://${process.env.SPACES_REGION}.digitaloceanspaces.com`,
+        forcePathStyle: false,
+      },
+    }),
   ],
   secret: process.env.PAYLOAD_SECRET,
   sharp,
