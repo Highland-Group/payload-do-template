@@ -110,7 +110,7 @@ That's it — `NEXT_PUBLIC_SERVER_URL` resolves once the app has a URL, includin
 
 ### Generate & update secrets
 
-`openssl rand -base64 32` — use to generate `PAYLOAD_SECRET`, `CRON_SECRET`, and `PREVIEW_SECRET`.
+Use `openssl rand -base64 32` — use to generate `PAYLOAD_SECRET`, `CRON_SECRET`, and `PREVIEW_SECRET`.
 
 ### Testing a production build with Docker
 
